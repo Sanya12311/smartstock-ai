@@ -36,7 +36,7 @@ async function loadOrders() {
         <td><span class="badge-tag ${statusBadgeClass(o.status)}">${o.status}</span></td>
         <td style="font-size:11px; color:var(--text-muted);">${o.rejection_reason ? escapeHtml(o.rejection_reason) : "—"}</td>
         <td style="font-size:11px;">${new Date(o.created_at).toLocaleString("en-IN")}</td>
-        <td>${["PENDING", "TRANSIT"].includes(o.status) ? `<button class="icon-btn" onclick="refreshOrder(${o.id})" title="Refresh status">↻</button>` : ""}</td>
+        <td>${["PENDING", "TRANSIT"].includes(o.status) ? `<button class="icon-btn" onclick="refreshOrder(${o.id})" title="Refresh status">↻</button> <button class="icon-btn" onclick="cancelOrder(${o.id})" title="Cancel order">✕</button>` : ""}</td>
       </tr>`
       )
       .join("");
@@ -48,6 +48,16 @@ async function loadOrders() {
 async function refreshOrder(id) {
   try {
     await apiPost(`/orders/${id}/refresh`);
+    loadOrders();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function cancelOrder(id) {
+  if (!confirm("Cancel this order?")) return;
+  try {
+    await apiPost(`/orders/${id}/cancel`);
     loadOrders();
   } catch (err) {
     alert(err.message);

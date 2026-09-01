@@ -93,3 +93,22 @@ def refresh_order(
         return order_service.refresh_order_status(db, current_user, order_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.post("/{order_id}/cancel", response_model=OrderOut)
+def cancel_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Cancel a still-pending order via the broker. Not in the master API
+    list either, but a real gap: we already track a CANCELLED status
+    without ever having a way to actually trigger it.
+    """
+    try:
+        return order_service.cancel_order(db, current_user, order_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except OrderValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

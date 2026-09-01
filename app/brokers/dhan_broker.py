@@ -139,3 +139,16 @@ class DhanBroker(BrokerInterface):
 
         body = response.json()
         return {"order_id": body.get("orderId"), "order_status": body.get("orderStatus")}
+
+    def cancel_order(self, access_token: str, client_id: str, broker_order_id: str) -> dict:
+        url = f"{API_BASE_URL}/orders/{broker_order_id}"
+        try:
+            response = requests.delete(
+                url, headers=self._order_headers(access_token, client_id), timeout=REQUEST_TIMEOUT_SECONDS
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise DhanBrokerError(f"Order cancellation failed: {exc}") from exc
+
+        body = response.json()
+        return {"order_id": body.get("orderId"), "order_status": body.get("orderStatus", "CANCELLED")}

@@ -156,3 +156,91 @@ def test_list_trades_filters_to_terminal_statuses(db_session, test_user, seeded_
 def test_orders_api_requires_auth(client):
     assert client.get("/orders").status_code == 401
     assert client.post("/orders/preview", json={"symbol": "TCS", "side": "BUY", "quantity": 1, "order_type": "MARKET"}).status_code == 401
+
+
+# ---------- Order cancellation ----------
+
+
+def test_cancel_pending_order_succeeds(db_session, test_user, seeded_stock):
+    _connected_broker(db_session, test_user)
+    with patch("app.services.order_service.is_market_open", return_value=True), patch.object(
+        order_service.broker, "place_order", return_value={"order_id": "ORD1", "order_status": "PENDING"}
+    ):
+        order = order_service.place_buy_order(db_session, test_user, "TCS", 10, "MARKET")
+
+    with patch.object(
+        order_service.broker, "cancel_order", return_value={"order_id": "ORD1", "order_status": "CANCELLED"}
+    ) as mock_cancel:
+        cancelled = order_service.cancel_order(db_session, test_user, order.id)
+
+    assert cancelled.status == "CANCELLED"
+    call_args = mock_cancel.call_args
+    assert call_args.args == ("FAKE_ACCESS_TOKEN", "DHAN_TEST_999", "ORD1")
+
+
+def test_cancel_order_that_never_reached_broker_rejected(db_session, test_user, seeded_stock):
+    _connected_broker(db_session, test_user)
+    with patch("app.services.order_service.is_market_open", return_value=True), patch.object(
+        order_service.broker, "place_order", side_effect=DhanBrokerError("no funds")
+    ):
+        order = order_service.place_buy_order(db_session, test_user, "TCS", 10, "MARKET")
+
+    try:
+        order_service.cancel_order(db_session, test_user, order.id)
+        assert False, "should have raised"
+    except order_service.OrderValidationError as exc:
+        assert "nothing to cancel" in str(exc).lower()
+
+
+def test_cancel_already_traded_order_rejected(db_session, test_user, seeded_stock):
+    _connected_broker(db_session, test_user)
+    with patch("app.services.order_service.is_market_open", return_value=True), patch.object(
+        order_service.broker, "place_order", return_value={"order_id": "ORD1", "order_status": "TRADED"}
+    ):
+        order = order_service.place_buy_order(db_session, test_user, "TCS", 10, "MARKET")
+
+    try:
+        order_service.cancel_order(db_session, test_user, order.id)
+        assert False, "should have raised"
+    except order_service.OrderValidationError as exc:
+        assert "already" in str(exc).lower()
+
+
+def test_cancel_unknown_order_404(db_session, test_user):
+    _connected_broker(db_session, test_user)
+    try:
+        order_service.cancel_order(db_session, test_user, 99999)
+        assert False, "should have raised"
+    except ValueError as exc:
+        assert "not found" in str(exc).lower()
+
+
+def test_cancel_another_users_order_blocked(db_session, test_user, seeded_stock):
+    """IDOR check, same pattern as the rest of the codebase."""
+    _connected_broker(db_session, test_user)
+    with patch("app.services.order_service.is_market_open", return_value=True), patch.object(
+        order_service.broker, "place_order", return_value={"order_id": "ORD1", "order_status": "PENDING"}
+    ):
+        order = order_service.place_buy_order(db_session, test_user, "TCS", 10, "MARKET")
+
+    from app.models.user import User
+    from app.utils.security import hash_password
+
+    other_user = User(
+        email="otherorderuser@example.com",
+        full_name="Other",
+        hashed_password=hash_password("TestPass123"),
+        is_active=True,
+    )
+    db_session.add(other_user)
+    db_session.commit()
+
+    try:
+        order_service.cancel_order(db_session, other_user, order.id)
+        assert False, "should have raised"
+    except ValueError as exc:
+        assert "not found" in str(exc).lower()
+
+
+def test_cancel_order_api_requires_auth(client):
+    assert client.post("/orders/1/cancel").status_code == 401

@@ -36,3 +36,7 @@ class BrokerInterface(ABC):
     @abstractmethod
     def get_order_status(self, access_token: str, client_id: str, broker_order_id: str) -> dict:
         """Returns {'order_id', 'order_status'}."""
+
+    @abstractmethod
+    def cancel_order(self, access_token: str, client_id: str, broker_order_id: str) -> dict:
+        """Cancel a pending order. Returns {'order_id', 'order_status'}."""

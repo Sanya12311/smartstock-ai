@@ -226,6 +226,30 @@ def refresh_order_status(db: Session, user: User, order_id: int) -> Order:
     return order
 
 
+def cancel_order(db: Session, user: User, order_id: int) -> Order:
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user.id).first()
+    if order is None:
+        raise ValueError("Order not found")
+
+    if order.broker_order_id is None:
+        raise OrderValidationError("This order never reached the broker, so there is nothing to cancel.")
+    if order.status not in NON_TERMINAL_STATUSES:
+        raise OrderValidationError(
+            f"Order is already {order.status} and can no longer be cancelled."
+        )
+
+    broker_account = _get_connected_broker(db, user)
+    access_token = encryption.decrypt(broker_account.access_token_encrypted)
+
+    logger.info("Order cancel request: user_id=%s order_id=%s broker_order_id=%s", user.id, order.id, order.broker_order_id)
+    result = broker.cancel_order(access_token, broker_account.dhan_client_id, order.broker_order_id)
+    order.status = result.get("order_status") or "CANCELLED"
+    db.commit()
+    db.refresh(order)
+    logger.info("Order cancel response: user_id=%s order_id=%s status=%s", user.id, order.id, order.status)
+    return order
+
+
 def refresh_all_pending_orders(db: Session) -> List[dict]:
     """
     Called periodically by app/services/order_scheduler.py — there's no
