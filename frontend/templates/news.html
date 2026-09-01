@@ -1,0 +1,22 @@
+{% extends "app_shell.html" %}
+{% block title %}News - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>News</h2>
+<p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+  Real headlines for the stocks on your watchlist. Search any other symbol below to see its news too.
+</p>
+
+<div style="display:flex; gap:8px; margin-bottom:20px;">
+  <input type="text" id="news-search-input" placeholder="e.g. RELIANCE" style="flex:1; max-width:300px; padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text);">
+  <button class="btn btn-secondary btn-sm" onclick="loadSymbolNews()">Search</button>
+</div>
+
+<div id="news-feed">
+  <div class="loading-text">Loading your watchlist news…</div>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/news.js"></script>
+{% endblock %}

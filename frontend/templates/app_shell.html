@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="app-shell">
+  <div class="sidebar">
+    <div class="brand">SmartStock <span>AI</span></div>
+    <a class="nav-item {% if active_page == 'dashboard' %}active{% endif %}" href="/app/dashboard">Dashboard</a>
+    <a class="nav-item" href="/app/dashboard#watchlist">Watchlist</a>
+    <a class="nav-item {% if active_page == 'portfolio' %}active{% endif %}" href="/app/portfolio">Portfolio</a>
+    <a class="nav-item {% if active_page == 'stock_analysis' %}active{% endif %}" href="/app/stocks/TCS">Stock Analysis</a>
+    <a class="nav-item {% if active_page == 'orders' %}active{% endif %}" href="/app/orders">Orders</a>
+    <a class="nav-item {% if active_page == 'trade_history' %}active{% endif %}" href="/app/trade-history">Trade History</a>
+    <a class="nav-item {% if active_page == 'alerts' %}active{% endif %}" href="/app/alerts">Alerts</a>
+    <a class="nav-item {% if active_page == 'chat' %}active{% endif %}" href="/app/chat">AI Assistant</a>
+    <a class="nav-item {% if active_page == 'news' %}active{% endif %}" href="/app/news">News</a>
+    <a class="nav-item {% if active_page == 'paper_trading' %}active{% endif %}" href="/app/paper-trading">Paper Trading</a>
+    <a class="nav-item {% if active_page == 'broker' %}active{% endif %}" href="/app/broker">Broker</a>
+    <a class="nav-item {% if active_page == 'settings' %}active{% endif %}" href="/app/settings">Settings</a>
+    <div style="flex:1"></div>
+    <a class="nav-item" href="#" onclick="logout(); return false;">Logout</a>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="ticker" id="market-ticker">
+        <span class="loading-text">Loading market data…</span>
+      </div>
+      <div class="right">
+        <div class="bell" onclick="window.location.href='#'" title="Notifications">
+          🔔
+          <span class="badge" id="notification-badge"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+      {% block page_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/shell.js"></script>
+{% block page_scripts %}{% endblock %}
+{% endblock %}

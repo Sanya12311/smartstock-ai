@@ -1,0 +1,70 @@
+{% extends "app_shell.html" %}
+{% block title %}Paper Trading - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>Paper Trading</h2>
+<p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+  Simulated trading with virtual money — practice the full buy/sell workflow risk-free before connecting a real broker.
+</p>
+
+<div class="grid grid-4" id="paper-summary-cards">
+  <div class="card"><div class="label">Cash Balance</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Holdings Value</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Net Worth</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Total P&amp;L</div><div class="value loading-text">Loading…</div></div>
+</div>
+
+<div class="section-title">Place Paper Order</div>
+<div class="card">
+  <div class="grid grid-4">
+    <div class="form-group">
+      <label>Symbol</label>
+      <input type="text" id="paper-symbol" placeholder="e.g. TCS">
+    </div>
+    <div class="form-group">
+      <label>Side</label>
+      <select id="paper-side">
+        <option value="BUY">BUY</option>
+        <option value="SELL">SELL</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Quantity</label>
+      <input type="number" id="paper-quantity" min="1" value="1">
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end;">
+      <button class="btn btn-primary" style="width:auto;" onclick="placePaperOrder()">Submit</button>
+    </div>
+  </div>
+  <div id="paper-order-error" class="error-message"></div>
+  <div id="paper-order-result" style="font-size:13px; margin-top:8px;"></div>
+</div>
+
+<div class="section-title">Paper Holdings</div>
+<div class="table-card">
+  <table>
+    <thead>
+      <tr><th>Symbol</th><th>Qty</th><th>Avg. Buy</th><th>Current</th><th>Invested</th><th>Value</th><th>P&amp;L</th></tr>
+    </thead>
+    <tbody id="paper-holdings-body">
+      <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title">Paper Order History</div>
+<div class="table-card">
+  <table>
+    <thead>
+      <tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Status</th><th>Reason</th><th>Placed</th></tr>
+    </thead>
+    <tbody id="paper-orders-body">
+      <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/paper_trading.js"></script>
+{% endblock %}

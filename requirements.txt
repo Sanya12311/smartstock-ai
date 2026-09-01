@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+sqlalchemy
+pymysql
+cryptography
+bcrypt
+pyjwt
+python-multipart
+email-validator
+requests
+dhanhq
+google-genai
+jinja2
+aiofiles
+pytest
+httpx

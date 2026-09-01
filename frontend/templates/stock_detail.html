@@ -1,0 +1,109 @@
+{% extends "app_shell.html" %}
+{% block title %}{{ symbol }} - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<div style="display:flex; gap:8px; margin-bottom:20px;">
+  <input type="text" id="stock-search-input" placeholder="Search stock e.g. TCS, INFY, bank…" style="flex:1; max-width:400px; padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text);">
+  <button class="btn btn-secondary btn-sm" onclick="searchStock()">Search</button>
+</div>
+<div id="search-results" style="margin-bottom:16px;"></div>
+
+<div id="quote-header">
+  <h2 id="quote-symbol">{{ symbol }}</h2>
+  <div class="loading-text">Loading quote…</div>
+</div>
+
+<div style="display:flex; gap:10px; margin:16px 0;">
+  <button class="btn btn-secondary btn-sm" onclick="addToWatchlist()">+ Watchlist</button>
+  <button class="btn btn-secondary btn-sm" onclick="showAlertForm()">+ Create Alert</button>
+</div>
+<div id="alert-form" class="card" style="display:none; margin-bottom:16px;">
+  <div class="grid grid-3">
+    <div class="form-group">
+      <label>Alert Type</label>
+      <select id="alert-type">
+        <option value="PRICE_ABOVE">Price above</option>
+        <option value="PRICE_BELOW">Price below</option>
+        <option value="PROFIT_PERCENT">Profit % reaches</option>
+        <option value="LOSS_PERCENT">Loss % reaches</option>
+        <option value="RSI_OVERBOUGHT">RSI overbought</option>
+        <option value="RSI_OVERSOLD">RSI oversold</option>
+        <option value="MACD_CROSS">MACD crossover</option>
+      </select>
+    </div>
+    <div class="form-group" id="alert-threshold-group">
+      <label>Threshold</label>
+      <input type="number" id="alert-threshold" step="0.01">
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end;">
+      <button class="btn btn-primary" style="width:auto;" onclick="createAlert()">Create</button>
+    </div>
+  </div>
+  <div id="alert-form-error" class="error-message"></div>
+</div>
+
+<div class="grid grid-2">
+  <div>
+    <div class="section-title">Technical Analysis</div>
+    <div class="card" id="analysis-card"><div class="loading-text">Loading…</div></div>
+
+    <div class="section-title">Risk &amp; Decision</div>
+    <div class="card" id="risk-decision-card"><div class="loading-text">Loading…</div></div>
+
+    <div class="section-title">News &amp; Sentiment</div>
+    <div class="table-card" id="news-card"><div class="loading-text" style="padding:16px;">Loading…</div></div>
+  </div>
+
+  <div>
+    <div class="section-title">Trade</div>
+    <div class="card">
+      <div class="form-group">
+        <label>Mode</label>
+        <select id="trade-mode">
+          <option value="paper">Paper Trading (simulated)</option>
+          <option value="real">Real (via connected broker)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Side</label>
+        <select id="trade-side">
+          <option value="BUY">BUY</option>
+          <option value="SELL">SELL</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Order Type</label>
+        <select id="trade-order-type" onchange="toggleLimitPrice()">
+          <option value="MARKET">Market</option>
+          <option value="LIMIT">Limit</option>
+        </select>
+      </div>
+      <div class="form-group" id="limit-price-group" style="display:none;">
+        <label>Limit Price</label>
+        <input type="number" id="trade-price" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Quantity</label>
+        <input type="number" id="trade-quantity" min="1" value="1">
+      </div>
+      <button class="btn btn-secondary" onclick="previewTrade()">Preview Order</button>
+
+      <div id="trade-preview" style="display:none; margin-top:16px; padding:14px; background:var(--bg-elevated); border-radius:8px; font-size:13px;"></div>
+      <button class="btn btn-primary" id="confirm-trade-btn" style="display:none; margin-top:12px;" onclick="confirmTrade()">Confirm Order</button>
+      <div id="trade-error" class="error-message" style="margin-top:12px;"></div>
+      <div id="trade-result" style="margin-top:12px; font-size:13px;"></div>
+    </div>
+
+    <div class="section-title">Ask AI about {{ symbol }}</div>
+    <div class="card">
+      <button class="btn btn-primary" onclick="explainStock()">Explain this analysis</button>
+      <div id="ai-explanation" style="margin-top:14px; font-size:13px; color:var(--text-muted); white-space:pre-wrap;"></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script>const CURRENT_SYMBOL = "{{ symbol }}";</script>
+<script src="/static/js/stock_detail.js"></script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "app_shell.html" %}
+{% block title %}Settings - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>Settings</h2>
+
+<div class="section-title">Account</div>
+<div class="card" id="account-card">
+  <div class="loading-text">Loading…</div>
+</div>
+
+<div class="disclaimer-banner" style="margin-top:20px;">
+  Profile editing and password changes aren't available yet — this page is read-only for now.
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/settings.js"></script>
+{% endblock %}

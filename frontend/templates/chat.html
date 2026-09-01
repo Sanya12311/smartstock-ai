@@ -1,0 +1,27 @@
+{% extends "app_shell.html" %}
+{% block title %}AI Assistant - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>AI Assistant</h2>
+
+<div class="chat-layout">
+  <div class="chat-sidebar">
+    <button class="btn btn-secondary btn-sm" style="width:100%; margin-bottom:10px;" onclick="startNewChat()">+ New Chat</button>
+    <div id="session-list"><div class="loading-text">Loading…</div></div>
+  </div>
+
+  <div class="chat-main">
+    <div class="chat-messages" id="chat-messages">
+      <div class="loading-text" style="padding:16px;">Ask about your portfolio, a specific stock, or general concepts like "explain RSI".</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask SmartStock AI…" onkeydown="if(event.key==='Enter') sendChatMessage()">
+      <button class="btn btn-primary" style="width:auto;" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/chat.js"></script>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "app_shell.html" %}
+{% block title %}Trade History - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>Trade History</h2>
+<p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+  Orders that reached a completed state (TRADED or PART_TRADED).
+</p>
+
+<div class="table-card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Broker</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Type</th><th>Price</th><th>Status</th><th>Executed</th></tr>
+    </thead>
+    <tbody id="trades-body">
+      <tr><td colspan="9" class="table-empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/trade_history.js"></script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "app_shell.html" %}
+{% block title %}Portfolio - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>Portfolio</h2>
+
+<div class="grid grid-3" id="portfolio-summary-cards">
+  <div class="card"><div class="label">Total Invested</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Current Value</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Total P&amp;L</div><div class="value loading-text">Loading…</div></div>
+</div>
+
+<div class="card" id="risk-card" style="margin-top:16px;">
+  <div class="label">Portfolio Risk</div>
+  <div id="risk-content" class="loading-text">Loading…</div>
+</div>
+
+<div class="section-title">Add Holding</div>
+<div class="card">
+  <div class="grid grid-4">
+    <div class="form-group">
+      <label for="add-symbol">Symbol</label>
+      <input type="text" id="add-symbol" placeholder="e.g. TCS">
+    </div>
+    <div class="form-group">
+      <label for="add-quantity">Quantity</label>
+      <input type="number" id="add-quantity" min="1">
+    </div>
+    <div class="form-group">
+      <label for="add-buy-price">Buy Price</label>
+      <input type="number" id="add-buy-price" min="0" step="0.01">
+    </div>
+    <div class="form-group">
+      <label for="add-buy-date">Buy Date</label>
+      <input type="date" id="add-buy-date">
+    </div>
+  </div>
+  <button class="btn btn-primary" style="width:auto;" onclick="addHolding()">Add Holding</button>
+  <div id="add-holding-error" class="error-message" style="margin-top:12px;"></div>
+</div>
+
+<div class="section-title">Holdings</div>
+<div class="table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol</th><th>Qty</th><th>Buy Price</th><th>Buy Date</th>
+        <th>Current</th><th>Invested</th><th>Value</th><th>P&amp;L</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="holdings-body">
+      <tr><td colspan="9" class="table-empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/portfolio.js"></script>
+{% endblock %}

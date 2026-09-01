@@ -1,0 +1,58 @@
+{% extends "app_shell.html" %}
+{% block title %}Dashboard - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<div class="disclaimer-banner">
+  SmartStock AI provides analysis and decision-support signals, not financial advice. No output here is a guarantee of profit or a guaranteed BUY/SELL recommendation.
+</div>
+
+<h2>Dashboard</h2>
+
+<div class="grid grid-4" id="portfolio-summary-cards">
+  <div class="card"><div class="label">Total Invested</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Current Value</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Total P&amp;L</div><div class="value loading-text">Loading…</div></div>
+  <div class="card"><div class="label">Portfolio Risk</div><div class="value loading-text">Loading…</div></div>
+</div>
+
+<div class="section-title">Watchlist</div>
+<div class="table-card">
+  <div style="padding:12px 16px; display:flex; gap:8px; border-bottom:1px solid var(--border);">
+    <input type="text" id="watchlist-add-input" placeholder="Add symbol e.g. TCS" style="flex:1; padding:8px 10px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text);">
+    <button class="btn btn-secondary btn-sm" onclick="addWatchlistItem()">Add</button>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Symbol</th><th>Price</th><th>Change</th><th></th></tr>
+    </thead>
+    <tbody id="watchlist-body">
+      <tr><td colspan="4" class="table-empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title">Holdings</div>
+<div class="table-card">
+  <table>
+    <thead>
+      <tr><th>Symbol</th><th>Qty</th><th>Avg. Buy</th><th>Current</th><th>Invested</th><th>Value</th><th>P&amp;L</th></tr>
+    </thead>
+    <tbody id="holdings-body">
+      <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title">Ask SmartStock AI</div>
+<div class="card">
+  <div style="display:flex; gap:8px;">
+    <input type="text" id="ai-question-input" placeholder="e.g. What's in my portfolio right now?" style="flex:1; padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text);">
+    <button class="btn btn-primary" style="width:auto;" onclick="askAI()">Ask</button>
+  </div>
+  <div id="ai-response" style="margin-top:14px; font-size:13px; color:var(--text-muted); white-space:pre-wrap;"></div>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

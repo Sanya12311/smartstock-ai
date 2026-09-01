@@ -1,0 +1,55 @@
+{% extends "app_shell.html" %}
+{% block title %}Broker - SmartStock AI{% endblock %}
+{% block page_content %}
+
+<h2>Broker Connection</h2>
+
+<div class="card" id="broker-status-card">
+  <div class="loading-text">Loading status…</div>
+</div>
+
+<div id="connect-flow" style="display:none;">
+  <div class="section-title">Step 1 — Register a Redirect URL with Dhan</div>
+  <div class="card">
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+      Go to <strong>web.dhan.co</strong> → profile icon → "Access DhanHQ APIs" → toggle to "API Key" mode →
+      create a new app using the <strong>exact</strong> Redirect URL below. Dhan will give you an
+      <strong>App ID</strong> and <strong>App Secret</strong> — come back here and enter them in Step 2.
+    </p>
+    <div id="redirect-uri-box" style="background:var(--bg-elevated); padding:10px 12px; border-radius:6px; font-size:12px; font-family:monospace; word-break:break-all;"></div>
+    <button class="btn btn-secondary btn-sm" style="margin-top:12px;" onclick="startBrokerConnection()">
+      Start / Restart Connection
+    </button>
+  </div>
+
+  <div class="section-title">Step 2 — Enter Your Dhan App Credentials</div>
+  <div class="card">
+    <div class="grid grid-3">
+      <div class="form-group">
+        <label>Dhan Client ID</label>
+        <input type="text" id="dhan-client-id">
+      </div>
+      <div class="form-group">
+        <label>App ID</label>
+        <input type="text" id="dhan-app-id">
+      </div>
+      <div class="form-group">
+        <label>App Secret</label>
+        <input type="password" id="dhan-app-secret">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:auto;" onclick="submitBrokerCredentials()">Continue</button>
+    <div id="credentials-error" class="error-message" style="margin-top:12px;"></div>
+    <div id="login-url-box" style="display:none; margin-top:14px;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+        Step 3 — click below, log into Dhan, and approve. You'll be redirected back automatically.
+      </p>
+      <a id="login-url-link" href="#" target="_blank" class="btn btn-primary" style="width:auto; display:inline-block;">Login to Dhan &amp; Approve →</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/broker.js"></script>
+{% endblock %}
