@@ -11,6 +11,34 @@ function riskBadgeClass(level) {
   return "badge-unavailable";
 }
 
+async function loadFundamentals() {
+  const card = document.getElementById("fundamentals-card");
+  try {
+    const f = await apiGet(`/stocks/${CURRENT_SYMBOL}/fundamentals`);
+    if (!f.data_available) {
+      card.innerHTML = `<div class="loading-text">${escapeHtml(f.note)}</div>`;
+      return;
+    }
+    // Not reachable today (no verified provider integrated yet), but kept
+    // ready for when one is: render real fields with source + timestamp.
+    card.innerHTML = `
+      <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Source: ${escapeHtml(f.source || "")} · As of: ${escapeHtml(f.as_of || "")}</div>
+      <div class="grid grid-3" style="font-size:13px;">
+        <div>P/E: ${f.pe_ratio ?? "—"}</div>
+        <div>Forward P/E: ${f.forward_pe ?? "—"}</div>
+        <div>EPS: ${f.eps ?? "—"}</div>
+        <div>ROE: ${f.roe ?? "—"}</div>
+        <div>Debt/Equity: ${f.debt_to_equity ?? "—"}</div>
+        <div>Market Cap: ${f.market_cap !== null ? formatMoney(f.market_cap) : "—"}</div>
+        <div>Revenue Growth: ${f.revenue_growth_percent !== null ? formatPercent(f.revenue_growth_percent) : "—"}</div>
+        <div>Profit Growth: ${f.profit_growth_percent !== null ? formatPercent(f.profit_growth_percent) : "—"}</div>
+        <div>Dividend Yield: ${f.dividend_yield_percent !== null ? formatPercent(f.dividend_yield_percent) : "—"}</div>
+      </div>`;
+  } catch (err) {
+    card.innerHTML = `<div class="loading-text">Fundamentals unavailable: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
 async function loadQuote() {
   const header = document.getElementById("quote-header");
   try {
@@ -242,4 +270,5 @@ async function explainStock() {
 
 loadQuote();
 loadAnalysis();
+loadFundamentals();
 loadNews();
