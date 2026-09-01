@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -7,7 +9,14 @@ from app.brokers.dhan_broker import DhanBrokerError
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
-from app.schemas.broker import BrokerConnectionStart, BrokerCredentials, BrokerLoginUrl, BrokerStatus
+from app.schemas.broker import (
+    BrokerConnectionStart,
+    BrokerCredentials,
+    BrokerFundsOut,
+    BrokerHoldingOut,
+    BrokerLoginUrl,
+    BrokerStatus,
+)
 from app.services import broker_service
 
 router = APIRouter(prefix="/broker", tags=["Broker"])
@@ -84,3 +93,25 @@ def get_broker_status(db: Session = Depends(get_db), current_user: User = Depend
 @router.delete("/disconnect", status_code=status.HTTP_204_NO_CONTENT)
 def disconnect_broker(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     broker_service.disconnect(db, current_user)
+
+
+@router.get("/holdings", response_model=List[BrokerHoldingOut])
+def get_broker_holdings(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Real demat holdings pulled live from Dhan — distinct from the manually-entered Portfolio page."""
+    try:
+        return broker_service.get_holdings(db, current_user)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except DhanBrokerError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Dhan request failed: {exc}")
+
+
+@router.get("/funds", response_model=BrokerFundsOut)
+def get_broker_funds(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Real account balance/margin limits pulled live from Dhan."""
+    try:
+        return broker_service.get_funds(db, current_user)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except DhanBrokerError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Dhan request failed: {exc}")

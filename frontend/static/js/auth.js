@@ -8,6 +8,8 @@ function hideError() {
   document.getElementById("error-message").classList.remove("visible");
 }
 
+let pendingPreAuthToken = null;
+
 async function handleLogin(event) {
   event.preventDefault();
   hideError();
@@ -25,6 +27,38 @@ async function handleLogin(event) {
 
     if (!response.ok) {
       throw new Error(data.detail || "Login failed");
+    }
+
+    if (data.requires_2fa) {
+      pendingPreAuthToken = data.pre_auth_token;
+      document.getElementById("login-form").style.display = "none";
+      document.getElementById("totp-form").style.display = "block";
+      return;
+    }
+
+    setToken(data.access_token);
+    window.location.href = "/app/dashboard";
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+async function handleTotpVerify(event) {
+  event.preventDefault();
+  hideError();
+
+  const code = document.getElementById("totp-code").value;
+
+  try {
+    const response = await fetch("/auth/2fa/verify-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pre_auth_token: pendingPreAuthToken, code }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Verification failed");
     }
 
     setToken(data.access_token);

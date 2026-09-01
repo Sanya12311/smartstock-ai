@@ -72,6 +72,29 @@ def preview_order(
         round(reference_price * quantity, 2) if reference_price is not None else None
     )
 
+    broker_check_status = "not_connected"
+    available_balance = None
+    available_quantity = None
+    sufficient = None
+
+    broker_account = db.query(BrokerAccount).filter(BrokerAccount.user_id == user.id).first()
+    if broker_account is not None and broker_account.status == "CONNECTED":
+        access_token = encryption.decrypt(broker_account.access_token_encrypted)
+        try:
+            if side == "BUY":
+                funds = broker.get_fund_limits(access_token, broker_account.dhan_client_id)
+                available_balance = funds.get("withdrawable_balance")
+                if available_balance is not None and estimated_value is not None:
+                    sufficient = available_balance >= estimated_value
+            else:
+                holdings = broker.get_holdings(access_token, broker_account.dhan_client_id)
+                matching = next((h for h in holdings if h.get("trading_symbol") == stock.symbol), None)
+                available_quantity = matching.get("available_qty") if matching else 0
+                sufficient = available_quantity >= quantity
+            broker_check_status = "ok"
+        except DhanBrokerError:
+            broker_check_status = "unavailable"
+
     return {
         "symbol": stock.symbol,
         "name": stock.name,
@@ -83,6 +106,10 @@ def preview_order(
         "price_status": price_status,
         "estimated_value": estimated_value,
         "market_open": is_market_open(),
+        "broker_check_status": broker_check_status,
+        "available_balance": available_balance,
+        "available_quantity": available_quantity,
+        "sufficient": sufficient,
     }
 
 
@@ -247,6 +274,52 @@ def cancel_order(db: Session, user: User, order_id: int) -> Order:
     db.commit()
     db.refresh(order)
     logger.info("Order cancel response: user_id=%s order_id=%s status=%s", user.id, order.id, order.status)
+    return order
+
+
+def modify_order(
+    db: Session, user: User, order_id: int, quantity: Optional[int], price: Optional[float]
+) -> Order:
+    if quantity is None and price is None:
+        raise OrderValidationError("Provide at least a new quantity or a new price to modify.")
+
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user.id).first()
+    if order is None:
+        raise ValueError("Order not found")
+
+    if order.broker_order_id is None:
+        raise OrderValidationError("This order never reached the broker, so there is nothing to modify.")
+    if order.status not in NON_TERMINAL_STATUSES:
+        raise OrderValidationError(
+            f"Order is already {order.status} and can no longer be modified."
+        )
+    if order.order_type != "LIMIT":
+        raise OrderValidationError(
+            "Only LIMIT orders can be modified — a MARKET order executes immediately at the "
+            "prevailing price, so there is no pending price/quantity to change."
+        )
+
+    new_quantity = quantity if quantity is not None else order.quantity
+    new_price = price if price is not None else order.price
+    _validate_order_shape(new_quantity, order.order_type, new_price)
+
+    broker_account = _get_connected_broker(db, user)
+    access_token = encryption.decrypt(broker_account.access_token_encrypted)
+
+    logger.info(
+        "Order modify request: user_id=%s order_id=%s broker_order_id=%s new_qty=%s new_price=%s",
+        user.id, order.id, order.broker_order_id, new_quantity, new_price,
+    )
+    result = broker.modify_order(
+        access_token, broker_account.dhan_client_id, order.broker_order_id, order.order_type, new_quantity, new_price
+    )
+    order.quantity = new_quantity
+    order.price = new_price
+    if result.get("order_status"):
+        order.status = result["order_status"]
+    db.commit()
+    db.refresh(order)
+    logger.info("Order modify response: user_id=%s order_id=%s status=%s", user.id, order.id, order.status)
     return order
 
 

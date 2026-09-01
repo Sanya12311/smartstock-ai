@@ -102,6 +102,25 @@ def get_status(db: Session, user: User) -> Optional[BrokerAccount]:
     return db.query(BrokerAccount).filter(BrokerAccount.user_id == user.id).first()
 
 
+def _get_connected_account(db: Session, user: User) -> BrokerAccount:
+    account = db.query(BrokerAccount).filter(BrokerAccount.user_id == user.id).first()
+    if account is None or account.status != "CONNECTED":
+        raise ValueError("No connected broker account. Connect Dhan via /broker/connect/start first.")
+    return account
+
+
+def get_holdings(db: Session, user: User) -> list:
+    account = _get_connected_account(db, user)
+    access_token = encryption.decrypt(account.access_token_encrypted)
+    return broker.get_holdings(access_token, account.dhan_client_id)
+
+
+def get_funds(db: Session, user: User) -> dict:
+    account = _get_connected_account(db, user)
+    access_token = encryption.decrypt(account.access_token_encrypted)
+    return broker.get_fund_limits(access_token, account.dhan_client_id)
+
+
 def disconnect(db: Session, user: User) -> bool:
     account = db.query(BrokerAccount).filter(BrokerAccount.user_id == user.id).first()
     if account is None:

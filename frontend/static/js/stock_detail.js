@@ -198,6 +198,7 @@ function toggleLimitPrice() {
 }
 
 async function previewTrade() {
+  const mode = document.getElementById("trade-mode").value;
   const side = document.getElementById("trade-side").value;
   const order_type = document.getElementById("trade-order-type").value;
   const quantity = parseInt(document.getElementById("trade-quantity").value, 10);
@@ -209,13 +210,28 @@ async function previewTrade() {
 
   try {
     const preview = await apiPost("/orders/preview", { symbol: CURRENT_SYMBOL, side, quantity, order_type, price });
+
+    let brokerCheckHtml = "";
+    if (mode === "real") {
+      if (preview.broker_check_status === "not_connected") {
+        brokerCheckHtml = `<div style="margin-top:6px; color:var(--text-muted);">Connect your broker (Broker page) to see real fund/holdings availability before placing this order.</div>`;
+      } else if (preview.broker_check_status === "unavailable") {
+        brokerCheckHtml = `<div style="margin-top:6px; color:var(--text-muted);">Broker balance/holdings check unavailable right now — Dhan will still authoritatively accept or reject the order.</div>`;
+      } else if (preview.side === "BUY") {
+        brokerCheckHtml = `<div style="margin-top:6px;" class="${preview.sufficient ? "positive" : "negative"}">Withdrawable balance: ${formatMoney(preview.available_balance)}${preview.sufficient ? "" : " — likely insufficient for this order"}</div>`;
+      } else {
+        brokerCheckHtml = `<div style="margin-top:6px;" class="${preview.sufficient ? "positive" : "negative"}">Available holdings: ${preview.available_quantity ?? "—"}${preview.sufficient ? "" : " — likely insufficient for this order"}</div>`;
+      }
+    }
+
     previewEl.style.display = "block";
     previewEl.innerHTML = `
       <div><strong>${preview.side} ${preview.quantity} ${preview.symbol}</strong> (${preview.order_type})</div>
       <div style="margin-top:6px;">Current market price: ${preview.current_market_price !== null ? formatMoney(preview.current_market_price) : "unavailable"}</div>
       <div>Estimated value: ${preview.estimated_value !== null ? formatMoney(preview.estimated_value) : "unavailable"}</div>
       <div>Market: ${preview.market_open ? "Open" : "Closed"}</div>
-      <div style="margin-top:8px; color:var(--text-muted); font-size:11px;">This is a decision-support estimate, not a guarantee of the final execution price.</div>`;
+      ${brokerCheckHtml}
+      <div style="margin-top:8px; color:var(--text-muted); font-size:11px;">This is a decision-support estimate, not a guarantee of the final execution price. Dhan's own acceptance/rejection at order time is always authoritative.</div>`;
     document.getElementById("confirm-trade-btn").style.display = "inline-block";
   } catch (err) {
     errorEl.textContent = err.message;

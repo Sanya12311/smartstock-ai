@@ -9,8 +9,65 @@
   <div class="loading-text">Loading…</div>
 </div>
 
+<div class="section-title" style="margin-top:20px;">Change Password</div>
+<div class="card">
+  <div class="grid grid-3">
+    <div class="form-group">
+      <label>Current Password</label>
+      <input type="password" id="current-password">
+    </div>
+    <div class="form-group">
+      <label>New Password</label>
+      <input type="password" id="new-password">
+    </div>
+    <div class="form-group">
+      <label>Confirm New Password</label>
+      <input type="password" id="confirm-new-password">
+    </div>
+  </div>
+  <button class="btn btn-primary" style="width:auto;" onclick="changePassword()">Change Password</button>
+  <div id="password-error" class="error-message" style="margin-top:12px;"></div>
+  <div id="password-success" class="positive" style="display:none; margin-top:12px;">Password changed successfully.</div>
+</div>
+
 <div class="disclaimer-banner" style="margin-top:20px;">
-  Profile editing and password changes aren't available yet — this page is read-only for now.
+  Profile editing (name/email) isn't available yet.
+</div>
+
+<div class="section-title" style="margin-top:20px;">Two-Factor Authentication</div>
+<div class="card" id="twofa-card">
+  <div class="loading-text">Loading…</div>
+</div>
+
+<div id="twofa-setup-flow" style="display:none;">
+  <div class="card">
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+      Scan this QR code with an authenticator app (Google Authenticator, Authy, etc.), or enter the
+      secret manually, then confirm with the 6-digit code it shows.
+    </p>
+    <img id="twofa-qr-code" style="background:#fff; padding:8px; border-radius:6px;" alt="2FA QR code">
+    <div style="margin-top:10px; font-size:12px; font-family:monospace; word-break:break-all; color:var(--text-muted);" id="twofa-secret"></div>
+    <div class="form-group" style="max-width:200px; margin-top:14px;">
+      <label>6-digit code</label>
+      <input type="text" id="twofa-enable-code" inputmode="numeric" pattern="\d{6}" maxlength="6">
+    </div>
+    <button class="btn btn-primary" style="width:auto;" onclick="confirmEnable2fa()">Confirm &amp; Enable</button>
+    <div id="twofa-setup-error" class="error-message" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<div class="section-title" style="margin-top:20px; color:var(--red);">Danger Zone</div>
+<div class="card">
+  <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+    Permanently deletes your account and everything tied to it — portfolio, orders, trade history,
+    paper trading, broker connection, alerts, and chat history. This cannot be undone.
+  </p>
+  <div class="form-group" style="max-width:280px;">
+    <label>Confirm Password</label>
+    <input type="password" id="delete-account-password">
+  </div>
+  <button class="btn btn-danger" style="width:auto;" onclick="deleteAccount()">Delete My Account</button>
+  <div id="delete-account-error" class="error-message" style="margin-top:12px;"></div>
 </div>
 
 {% endblock %}

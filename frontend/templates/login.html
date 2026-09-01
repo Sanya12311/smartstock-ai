@@ -8,7 +8,7 @@
 
     <div id="error-message" class="error-message"></div>
 
-    <form onsubmit="handleLogin(event)">
+    <form id="login-form" onsubmit="handleLogin(event)">
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" id="email" required autocomplete="email">
@@ -18,6 +18,17 @@
         <input type="password" id="password" required autocomplete="current-password">
       </div>
       <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+
+    <form id="totp-form" onsubmit="handleTotpVerify(event)" style="display:none;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+        Enter the 6-digit code from your authenticator app.
+      </p>
+      <div class="form-group">
+        <label for="totp-code">Authenticator Code</label>
+        <input type="text" id="totp-code" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Verify</button>
     </form>
 
     <p class="auth-switch">Don't have an account? <a href="/register">Register</a></p>

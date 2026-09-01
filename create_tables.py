@@ -1,9 +1,14 @@
 """
-One-off script to create all database tables from the SQLAlchemy models.
-Run this after creating the MySQL database and setting DB_* values in .env.
+One-off script to create all database tables from the SQLAlchemy models —
+useful for a fresh dev DB with no history yet. Since Phase 28, schema
+changes to an existing database should go through Alembic instead
+(`alembic revision --autogenerate -m "..."` then `alembic upgrade head`)
+so they're tracked and reversible rather than requiring a manual
+drop/recreate. See migrations/ and the README.
 
 Usage (with the virtual environment activated):
     python create_tables.py
+    alembic stamp head   # so Alembic knows this DB is already at the latest schema
 """
 
 from app.database import Base, engine

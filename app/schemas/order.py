@@ -44,6 +44,13 @@ class OrderPreviewOut(BaseModel):
     price_status: str
     estimated_value: Optional[float] = None
     market_open: bool
+    # Real-money check against the connected Dhan account (BUY: funds, SELL: demat
+    # holdings) — "not_connected" if no broker is linked, "unavailable" if the Dhan
+    # call itself failed, "ok" once available_balance/available_quantity is real data.
+    broker_check_status: str = "not_connected"
+    available_balance: Optional[float] = None
+    available_quantity: Optional[float] = None
+    sufficient: Optional[bool] = None
 
 
 class OrderRequest(BaseModel):
@@ -65,6 +72,14 @@ class OrderRequest(BaseModel):
         if info.data.get("order_type") == "LIMIT" and (v is None or v <= 0):
             raise ValueError("price is required and must be positive for LIMIT orders")
         return v
+
+
+class OrderModifyRequest(BaseModel):
+    """At least one of quantity/price must be given; both are optional so a
+    caller can change just one without re-stating the other."""
+
+    quantity: Optional[int] = Field(default=None, gt=0)
+    price: Optional[float] = Field(default=None, gt=0)
 
 
 class OrderOut(BaseModel):

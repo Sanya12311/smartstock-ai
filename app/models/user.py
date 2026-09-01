@@ -12,6 +12,10 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    # TOTP secret is encrypted at rest (app.utils.encryption, same key used
+    # for broker credentials) — never stored or logged in plain text.
+    totp_secret_encrypted = Column(String(255), nullable=True)
+    totp_enabled = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

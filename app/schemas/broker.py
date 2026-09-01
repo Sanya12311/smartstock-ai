@@ -28,3 +28,26 @@ class BrokerStatus(BaseModel):
     status: str
     dhan_client_id: Optional[str] = None
     connected_at: Optional[datetime] = None
+
+
+class BrokerHoldingOut(BaseModel):
+    exchange: Optional[str] = None
+    trading_symbol: Optional[str] = None
+    security_id: Optional[str] = None
+    isin: Optional[str] = None
+    total_qty: Optional[float] = None
+    dp_qty: Optional[float] = None
+    t1_qty: Optional[float] = None
+    available_qty: Optional[float] = None
+    collateral_qty: Optional[float] = None
+    avg_cost_price: Optional[float] = None
+
+
+class BrokerFundsOut(BaseModel):
+    available_balance: Optional[float] = None
+    sod_limit: Optional[float] = None
+    collateral_amount: Optional[float] = None
+    receivable_amount: Optional[float] = None
+    utilized_amount: Optional[float] = None
+    blocked_payout_amount: Optional[float] = None
+    withdrawable_balance: Optional[float] = None

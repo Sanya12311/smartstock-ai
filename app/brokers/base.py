@@ -40,3 +40,23 @@ class BrokerInterface(ABC):
     @abstractmethod
     def cancel_order(self, access_token: str, client_id: str, broker_order_id: str) -> dict:
         """Cancel a pending order. Returns {'order_id', 'order_status'}."""
+
+    @abstractmethod
+    def modify_order(
+        self,
+        access_token: str,
+        client_id: str,
+        broker_order_id: str,
+        order_type: str,
+        quantity: int,
+        price: float,
+    ) -> dict:
+        """Modify a still-pending order's quantity/price. Returns {'order_id', 'order_status'}."""
+
+    @abstractmethod
+    def get_holdings(self, access_token: str, client_id: str) -> list:
+        """Real demat holdings from the broker (not our manually-entered portfolio)."""
+
+    @abstractmethod
+    def get_fund_limits(self, access_token: str, client_id: str) -> dict:
+        """Real account balance/margin limits from the broker."""

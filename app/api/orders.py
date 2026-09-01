@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.brokers.dhan_broker import DhanBrokerError
 from app.database import get_db
 from app.models.user import User
-from app.schemas.order import OrderOut, OrderPreviewOut, OrderPreviewRequest, OrderRequest
+from app.schemas.order import OrderModifyRequest, OrderOut, OrderPreviewOut, OrderPreviewRequest, OrderRequest
 from app.services import order_service
 from app.services.order_service import OrderValidationError
 
@@ -93,6 +94,8 @@ def refresh_order(
         return order_service.refresh_order_status(db, current_user, order_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except DhanBrokerError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Dhan request failed: {exc}")
 
 
 @router.post("/{order_id}/cancel", response_model=OrderOut)
@@ -112,3 +115,27 @@ def cancel_order(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except OrderValidationError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except DhanBrokerError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Dhan request failed: {exc}")
+
+
+@router.post("/{order_id}/modify", response_model=OrderOut)
+def modify_order(
+    order_id: int,
+    payload: OrderModifyRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Change quantity/price on a still-pending LIMIT order. Also not in the
+    master API list — same real gap as cancel: previously the only way to
+    change a pending order was to cancel and re-place it.
+    """
+    try:
+        return order_service.modify_order(db, current_user, order_id, payload.quantity, payload.price)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except OrderValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except DhanBrokerError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Dhan request failed: {exc}")

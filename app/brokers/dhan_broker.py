@@ -152,3 +152,91 @@ class DhanBroker(BrokerInterface):
 
         body = response.json()
         return {"order_id": body.get("orderId"), "order_status": body.get("orderStatus", "CANCELLED")}
+
+    def modify_order(
+        self,
+        access_token: str,
+        client_id: str,
+        broker_order_id: str,
+        order_type: str,
+        quantity: int,
+        price: float,
+    ) -> dict:
+        url = f"{API_BASE_URL}/orders/{broker_order_id}"
+        payload = {
+            "dhanClientId": client_id,
+            "orderId": broker_order_id,
+            "orderType": order_type.upper(),
+            # Only ever LIMIT orders on a plain CNC delivery order (see place_order) —
+            # legName is only meaningful for Bracket/Cover order legs, which this app
+            # never places, so "NA" per Dhan's convention for non-BO/CO orders.
+            "legName": "NA",
+            "quantity": int(quantity),
+            "price": float(price),
+            "disclosedQuantity": 0,
+            "triggerPrice": 0.0,
+            "validity": "DAY",
+        }
+        try:
+            response = requests.put(
+                url,
+                json=payload,
+                headers=self._order_headers(access_token, client_id),
+                timeout=REQUEST_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise DhanBrokerError(f"Order modification failed: {exc}") from exc
+
+        body = response.json()
+        return {"order_id": body.get("orderId"), "order_status": body.get("orderStatus", "PENDING")}
+
+    def get_holdings(self, access_token: str, client_id: str) -> list:
+        url = f"{API_BASE_URL}/holdings"
+        try:
+            response = requests.get(
+                url, headers=self._order_headers(access_token, client_id), timeout=REQUEST_TIMEOUT_SECONDS
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise DhanBrokerError(f"Failed to fetch holdings: {exc}") from exc
+
+        body = response.json()
+        return [
+            {
+                "exchange": item.get("exchange"),
+                "trading_symbol": item.get("tradingSymbol"),
+                "security_id": item.get("securityId"),
+                "isin": item.get("isin"),
+                "total_qty": item.get("totalQty"),
+                "dp_qty": item.get("dpQty"),
+                "t1_qty": item.get("t1Qty"),
+                "available_qty": item.get("availableQty"),
+                "collateral_qty": item.get("collateralQty"),
+                "avg_cost_price": item.get("avgCostPrice"),
+            }
+            for item in body
+        ]
+
+    def get_fund_limits(self, access_token: str, client_id: str) -> dict:
+        url = f"{API_BASE_URL}/fundlimit"
+        try:
+            response = requests.get(
+                url, headers=self._order_headers(access_token, client_id), timeout=REQUEST_TIMEOUT_SECONDS
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise DhanBrokerError(f"Failed to fetch fund limits: {exc}") from exc
+
+        body = response.json()
+        return {
+            # Dhan's own API spells these fields "availabelBalance" / "receiveableAmount" (typos in their JSON) —
+            # normalized here to correctly-spelled snake_case for the rest of this app.
+            "available_balance": body.get("availabelBalance"),
+            "sod_limit": body.get("sodLimit"),
+            "collateral_amount": body.get("collateralAmount"),
+            "receivable_amount": body.get("receiveableAmount"),
+            "utilized_amount": body.get("utilizedAmount"),
+            "blocked_payout_amount": body.get("blockedPayoutAmount"),
+            "withdrawable_balance": body.get("withdrawableBalance"),
+        }

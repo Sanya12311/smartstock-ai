@@ -3,6 +3,7 @@ uvicorn[standard]
 python-dotenv
 sqlalchemy
 pymysql
+alembic
 cryptography
 bcrypt
 pyjwt
@@ -15,3 +16,5 @@ jinja2
 aiofiles
 pytest
 httpx
+pyotp
+qrcode[pil]

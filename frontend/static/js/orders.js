@@ -36,7 +36,7 @@ async function loadOrders() {
         <td><span class="badge-tag ${statusBadgeClass(o.status)}">${o.status}</span></td>
         <td style="font-size:11px; color:var(--text-muted);">${o.rejection_reason ? escapeHtml(o.rejection_reason) : "—"}</td>
         <td style="font-size:11px;">${new Date(o.created_at).toLocaleString("en-IN")}</td>
-        <td>${["PENDING", "TRANSIT"].includes(o.status) ? `<button class="icon-btn" onclick="refreshOrder(${o.id})" title="Refresh status">↻</button> <button class="icon-btn" onclick="cancelOrder(${o.id})" title="Cancel order">✕</button>` : ""}</td>
+        <td>${["PENDING", "TRANSIT"].includes(o.status) ? `<button class="icon-btn" onclick="refreshOrder(${o.id})" title="Refresh status">↻</button> ${o.order_type === "LIMIT" ? `<button class="icon-btn" onclick="modifyOrder(${o.id}, ${o.quantity}, ${o.price})" title="Modify order">✎</button> ` : ""}<button class="icon-btn" onclick="cancelOrder(${o.id})" title="Cancel order">✕</button>` : ""}</td>
       </tr>`
       )
       .join("");
@@ -48,6 +48,27 @@ async function loadOrders() {
 async function refreshOrder(id) {
   try {
     await apiPost(`/orders/${id}/refresh`);
+    loadOrders();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function modifyOrder(id, currentQuantity, currentPrice) {
+  const qtyInput = prompt("New quantity:", currentQuantity);
+  if (qtyInput === null) return;
+  const priceInput = prompt("New price:", currentPrice);
+  if (priceInput === null) return;
+
+  const quantity = parseInt(qtyInput, 10);
+  const price = parseFloat(priceInput);
+  if (!Number.isInteger(quantity) || quantity <= 0 || !Number.isFinite(price) || price <= 0) {
+    alert("Quantity and price must be positive numbers.");
+    return;
+  }
+
+  try {
+    await apiPost(`/orders/${id}/modify`, { quantity, price });
     loadOrders();
   } catch (err) {
     alert(err.message);

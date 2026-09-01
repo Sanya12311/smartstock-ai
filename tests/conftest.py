@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -39,6 +39,19 @@ TEST_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
     TEST_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
+
+
+@event.listens_for(engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, _):
+    # SQLite ignores FK constraints (including ondelete='CASCADE') unless a
+    # connection explicitly turns this on — without it, cascading deletes
+    # would silently no-op in tests while working correctly against the
+    # real MySQL database, masking a real difference in behavior.
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -51,6 +64,14 @@ def _override_get_db():
 
 
 app.dependency_overrides[get_db] = _override_get_db
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limits():
+    from app.utils import rate_limit
+
+    rate_limit.reset()
+    yield
 
 
 @pytest.fixture()

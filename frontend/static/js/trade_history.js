@@ -27,4 +27,25 @@ async function loadTrades() {
   }
 }
 
+async function downloadTradesCsv() {
+  try {
+    const response = await apiFetch("/trades/export/csv");
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.detail || `Request failed (${response.status})`);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `smartstock_trades_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 loadTrades();
